@@ -1,0 +1,129 @@
+#! /usr/bin/ruby
+
+require 'json'
+require 'mysql2'
+require './datastores.rb'
+require './marshal.rb'
+
+string_limits = {
+	'char' => 255,
+	'varchar' => 255,
+	'tinytext' => 255,
+	'text' =>  65535,
+	'mediumtext' => 16777215,
+	'longtext' => 4294967295,
+	'binary' => 255,
+	'varbinary' => 255,
+}
+
+def is_string?(t)
+	types = {
+		'char' => true,
+		'varchar' => true,
+		'tinytext' => true,
+		'text' =>  true,
+		'mediumtext' => true,
+		'longtext' => true,
+		'binary' => true,
+		'varbinary' => true,
+	}
+
+	(types[t] == true)
+end
+
+def is_integer?(t)
+		types = {
+			'bit' => "integer",
+			"tinyint" => "integer",
+			"smallint" => "integer",
+			"int" => "integer",
+			"integer" => "integer",
+			"bigint" => "integer",
+	}
+
+	(types[t] == true)
+end
+
+def is_decimal?(t)
+	types = {
+		'decimal' => "decimal",
+		'dec' => "decimal",
+		'numeric' => "decimal",
+		'fixed' => "decimal",
+		'float' => "decimal",
+		'double' => "decimal",
+		'double precision' => "decimal",
+		'real' => "decimal",
+		'float' => "decimal",
+	}
+
+	(types[t] == true)
+end
+
+def is_bool?(t)
+	types = {
+		'boolean' => "bool",
+		'bool' => "bool",
+	}
+
+	(types[t] == true)
+end
+
+		"date" => "date",
+		"datetime" => "date",
+		"timestamp" => "date",
+		"time" => "time",
+
+		"year" => "year"
+
+
+	}
+
+	return types[t]
+end
+
+# Template that renders a CREATE TABLE statement.
+def create_template(t)
+	columns = ""
+	t['schema'].keys.sort.each do |key|
+		c = t['schema'][key]
+		c['key'] = key
+
+		if columns != "" then columns += ", " end
+		columns += string_template(c)
+
+		c.delete(key)
+	end
+
+	%{
+		CREATE TABLE IF NOT EXISTS #{t['name']} (
+			#{columns}
+		);
+	}.gsub(/\t/, "").gsub(/\n/, "")
+end
+
+# Template that renders a string datatype.
+def string_template(c)
+	%{
+		#{c['key']}
+			 #{c['type']} #{ if c['size'] then "(#{c['size']})" end }
+			#{if c['primary key'] == true then " PRIMARY KEY" end }
+	}
+end
+
+def integer_template(c)
+	%{
+		#{c['key']}
+			#{c['type']}#{ if c['max'] then "(#{c['max']})" end }
+			#{ if c['primary key'] == true then " PRIMARY KEY" end }
+	}
+end
+
+Datastores.import
+
+table = JSON.parse(File.read("tables/test.json"))
+q = create_template(table)
+
+d = Datastores.get(table['datastore'])
+puts q
+d['client'].query(q)

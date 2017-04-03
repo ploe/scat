@@ -1,0 +1,11 @@
+{
+	"name": "business",
+	"description": "MySQL Backed Datastore for Storing Business Information",
+	"format": "mysql",
+
+	"database": "business",
+	"host": "127.0.0.1",
+	"password": "password",
+	"port": 3306,
+	"username": "root"
+}

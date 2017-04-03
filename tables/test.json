@@ -1,0 +1,17 @@
+{
+	"name": "users",
+	"description": "Users information for the business!",
+
+	"datastore": "business",
+	"schema": {
+		"id": {
+			"primary key": true,
+			"max": 300,
+			"type": "int"
+		},
+		"name": {
+			"type": "char",
+			"size": 20
+		}
+	}
+}
